@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Sisus.Init.Internal
+namespace Sisus
 {
 	/// <summary>
 	/// A list of components acquired using <see cref="GetComponentExtensions.GetComponentsNonAlloc"/>.
@@ -28,7 +28,7 @@ namespace Sisus.Init.Internal
 	/// // do something with components
 	/// </code>
 	/// </example>
-	internal sealed class ComponentCollection<TComponent> : List<TComponent>, IDisposable
+	public sealed class ComponentCollection<TComponent> : List<TComponent>, IDisposable
 	{
 		internal ComponentCollection(int capacity) : base(capacity) { }
 
