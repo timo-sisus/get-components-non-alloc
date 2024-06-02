@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 namespace Sisus
 {
 	/// <summary>
-	/// A list of components acquired using <see cref="GetComponentExtensions.GetComponentsNonAlloc"/>.
+	/// A list of components acquired using <see cref="GetComponentExtensions.GetComponentsNonAlloc{TComponent}"/>.
 	/// <para>
 	/// This object should never be cached or reused; it should either be used with a using statement,
 	/// so that it gets disposed when leaving the method scope, or iterated once with a foreach statement,
@@ -30,58 +30,119 @@ namespace Sisus
 	/// </example>
 	public sealed class ComponentCollection<TComponent> : List<TComponent>, IDisposable
 	{
-		internal ComponentCollection(int capacity) : base(capacity) { }
+		private static readonly List<ComponentCollection<TComponent>> cache = new(1);
+
+		private ComponentCollection() { }
+
+		internal static ComponentCollection<TComponent> GetFrom(GameObject gameObject)
+		{
+			ComponentCollection<TComponent> collection;
+
+			int count = cache.Count;
+			if(count > 0)
+			{
+				int lastIndex = count - 1;
+				collection = cache[lastIndex];
+				cache.RemoveAt(lastIndex);
+			}
+			else
+			{
+				collection = new ComponentCollection<TComponent>();
+			}
+
+			gameObject.GetComponents(collection);
+
+			return collection;
+		}
 
 		public void Dispose()
 		{
-			var cachedResults = GetComponentExtensions.Cached<TComponent>.collections;
-			if(!cachedResults.Contains(this))
+			if(!cache.Contains(this))
 			{
 				Clear();
-				cachedResults.Add(this);
+				cache.Add(this);
 			}
 		}
 
-		public new Enumerator GetEnumerator() => new(this);
+		public new Enumerator GetEnumerator() => Enumerator.Get(this);
 
-		public new struct Enumerator : IDisposable
+		public new sealed class Enumerator : IDisposable
 		{
-			private readonly ComponentCollection<TComponent> components;
+			private static readonly List<Enumerator> cache = new(1);
+
+			private ComponentCollection<TComponent> collection;
 			private int currentIndex;
 
-			public Enumerator(ComponentCollection<TComponent> components)
+			internal static Enumerator Get(ComponentCollection<TComponent> collection)
+			{
+				int count = cache.Count;
+				if(count == 0)
+				{
+					return new(collection);
+				}
+
+				int lastIndex = count - 1;
+				var enumerator = cache[lastIndex];
+				cache.RemoveAt(lastIndex);
+				enumerator.Setup(collection);
+				return enumerator;
+			}
+
+			private Enumerator(ComponentCollection<TComponent> collection) => Setup(collection);
+
+			private void Setup(ComponentCollection<TComponent> collection)
 			{
 				#if DEBUG || SAFE_MODE
-				if(components is null)
+				if(collection is null)
 				{
 					Debug.LogError($"Attempted to iterate over a null {nameof(ComponentCollection<object>)}<{typeof(TComponent).Name}>.");
-					components = new(0);
+					collection = new();
 				}
 				#endif
 
-				this.components = components;
+				this.collection = collection;
 				currentIndex = -1;
 			}
 
-			public bool MoveNext() => ++currentIndex < components.Count;
+			public bool MoveNext()
+			{
+				#if DEBUG || SAFE_MODE
+				if(collection is null)
+				{
+					Debug.LogError($"Attempted to execute {nameof(MoveNext)} on {nameof(ComponentCollection<object>)}<{typeof(TComponent).Name}>.{nameof(Enumerator)} after already reaching end of the list.");
+					return default;
+				}
+				#endif
+
+				currentIndex++;
+				return currentIndex < collection.Count;
+			}
 
 			public TComponent Current
 			{
 				get
 				{
 					#if DEBUG || SAFE_MODE
-					if(currentIndex < 0 || currentIndex >= components.Count)
+					if(collection is null || currentIndex < 0 || currentIndex >= collection.Count)
 					{
-						Debug.LogError($"Attempted to access {nameof(Current)} property of {nameof(ComponentCollection<object>)}<{typeof(TComponent).Name}>.{nameof(Enumerator)} after already reaching end of the list.", components.Count > 0 ? components[0] as Object : null);
+						Debug.LogError($"Attempted to access {nameof(Current)} property of {nameof(ComponentCollection<object>)}<{typeof(TComponent).Name}>.{nameof(Enumerator)} after already reaching end of the list.", collection is not null && collection.Count > 0 ? collection[0] as Object : null);
 						return default;
 					}
 					#endif
 
-					return components[currentIndex];
+					return collection[currentIndex];
 				}
 			}
 
-			public void Dispose() => components.Dispose();
+			public void Dispose()
+			{
+				if(!cache.Contains(this))
+				{
+    					collection.Dispose();
+					collection = null;
+					cache.Add(this);
+				}
+			}
 		}
 	}
 }
