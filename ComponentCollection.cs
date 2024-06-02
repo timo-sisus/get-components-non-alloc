@@ -18,7 +18,7 @@ namespace Sisus
 	/// <code>
 	/// foreach(var component in gameObject.GetComponentsNonAlloc{Component}())
 	/// {
-	///		// do something with component
+	/// 	// do something with component
 	/// }
 	/// </code>
 	/// </example>
@@ -46,7 +46,7 @@ namespace Sisus
 
 		public new struct Enumerator : IDisposable
 		{
-			private ComponentCollection<TComponent> components;
+			private readonly ComponentCollection<TComponent> components;
 			private int currentIndex;
 
 			public Enumerator(ComponentCollection<TComponent> components)
