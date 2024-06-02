@@ -47,7 +47,7 @@ namespace Sisus
 			}
 			else
 			{
-				collection = new ComponentCollection<TComponent>();
+				collection = new();
 			}
 
 			gameObject.GetComponents(collection);
