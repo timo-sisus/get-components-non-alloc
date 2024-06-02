@@ -55,6 +55,27 @@ namespace Sisus
 			return collection;
 		}
 
+  		internal static ComponentCollection<Component> GetFrom(GameObject gameObject, Type type)
+		{
+			ComponentCollection<Component> collection;
+
+			int count = cache.Count;
+			if(count > 0)
+			{
+				int lastIndex = count - 1;
+				collection = ComponentCollection<Component>.cache[lastIndex];
+				cache.RemoveAt(lastIndex);
+			}
+			else
+			{
+				collection = new();
+			}
+
+			gameObject.GetComponents(type, collection);
+
+			return collection;
+		}
+
 		public void Dispose()
 		{
 			if(!cache.Contains(this))
