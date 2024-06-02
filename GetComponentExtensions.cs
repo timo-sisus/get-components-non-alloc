@@ -24,7 +24,7 @@ namespace Sisus
 		/// <code>
 		/// foreach(var component in gameObject.GetComponentsNonAlloc{Component}())
 		/// {
-		///		// do something with component
+		/// 	// do something with component
 		/// }
 		/// </code>
 		/// </example>
