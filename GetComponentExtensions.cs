@@ -34,30 +34,6 @@ namespace Sisus
 		/// // do something with components
 		/// </code>
 		/// </example>
-		public static ComponentCollection<TComponent> GetComponentsNonAlloc<TComponent>(this GameObject gameObject)
-		{
-			ComponentCollection<TComponent> collection;
-
-			var cachedCollections = Cached<TComponent>.collections;
-			int count = cachedCollections.Count;
-			if(count > 0)
-			{
-				int lastIndex = count - 1;
-				collection = cachedCollections[lastIndex];
-				cachedCollections.RemoveAt(lastIndex);
-			}
-			else
-			{
-				collection = new ComponentCollection<TComponent>(1);
-			}
-
-			gameObject.GetComponents(collection);
-			return collection;
-		}
-
-		internal static class Cached<TComponent>
-		{
-			public static readonly List<ComponentCollection<TComponent>> collections = new();
-		}
+		public static ComponentCollection<TComponent> GetComponentsNonAlloc<TComponent>(this GameObject gameObject) => ComponentCollection<TComponent>.GetFrom(gameObject);
 	}
 }
