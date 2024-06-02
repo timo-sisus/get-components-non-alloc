@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Sisus.Init.Internal
+namespace Sisus
 {
 	/// <summary>
-	/// Extensions methods for <see cref="GameObject"/> that can be used to get components without allocating any garbage.
+	/// Extensions methods for <see cref="GameObject"/> that can be used to easily get components of a particular type without allocating any garbage.
 	/// </summary>
-	internal static class GetComponentExtensions
+	public static class GetComponentExtensions
 	{
 		/// <summary>
 		/// Gets references to all components of type <typeparamref name="TComponent"/> on the <paramref name="gameObject"/>,
